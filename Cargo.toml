@@ -1,0 +1,17 @@
+[package]
+name = "twilight-bucket"
+description = "wait n seconds before running this again"
+license = "MIT"
+repository = "https://github.com/laralove143/twilight-bucket"
+readme = "README.md"
+categories = ["Caching"]
+keywords = ["twilight", "discord", "discord-api", "bucket"]
+version = "0.1.0"
+edition = "2021"
+
+[dev-dependencies]
+tokio = { version = "1.17", default-features = false, features = ["rt-multi-thread", "macros"] }
+
+[dependencies]
+tokio = { version = "1.17", default-features = false, features = ["time"] }
+dashmap = "5.2"
