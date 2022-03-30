@@ -1,6 +1,6 @@
 # twilight-bucket
-![docs.rs](https://img.shields.io/docsrs/twilight-buckets?style=for-the-badge)
-![Crates.io](https://img.shields.io/crates/d/twilight-buckets?style=for-the-badge)
+![docs.rs](https://img.shields.io/docsrs/twilight-bucket?style=for-the-badge)
+![Crates.io](https://img.shields.io/crates/d/twilight-bucket?style=for-the-badge)
 
 a [twilight](https://docs.rs/twilight) utility crate to limit users' usage
 
