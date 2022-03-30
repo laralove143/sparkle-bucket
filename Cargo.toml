@@ -10,8 +10,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dev-dependencies]
-tokio = { version = "1.17", default-features = false, features = ["rt-multi-thread", "macros"] }
+tokio = { version = "1.17", default-features = false, features = ["rt-multi-thread", "macros", "time"] }
 
 [dependencies]
-tokio = { version = "1.17", default-features = false, features = ["time"] }
 dashmap = "5.2"
