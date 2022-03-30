@@ -6,7 +6,7 @@ repository = "https://github.com/laralove143/twilight-bucket"
 readme = "README.md"
 categories = ["caching"]
 keywords = ["twilight", "discord", "discord-api", "bucket"]
-version = "0.1.1"
+version = "0.1.2"
 edition = "2021"
 
 [dev-dependencies]
