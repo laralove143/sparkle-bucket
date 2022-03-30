@@ -1,7 +1,8 @@
 //! # twilight-bucket
 //! a [twilight](https://docs.rs/twilight) utility crate to limit users' usage
 //!
-//! all the functionality of this crate is under [`Bucket`], see its documentation for usage info
+//! all the functionality of this crate is under [`Bucket`], see its
+//! documentation for usage info
 //!
 //! this crate can be used with any library, but it shares twilight's non-goals,
 //! such as trying to be more verbose and less opinionated
@@ -10,41 +11,52 @@
 //! [serenity bucket]: https://docs.rs/serenity/latest/serenity/framework/standard/buckets
 //! # example
 //! ```
-//! use std::time::Duration;
-//!
+//! use std::{num::NonZeroU64, time::Duration};
 //! use twilight_bucket::{Bucket, Limit};
 //!
-//! // a user can use it once every 10 seconds
-//! let my_command_user_bucket =
-//!     Bucket::new(Limit::new(Duration::from_secs(10), 1.try_into().unwrap()));
-//! // it can be used up to 5 times every 30 seconds in one channel
-//! let my_command_channel_bucket =
-//!     Bucket::new(Limit::new(Duration::from_secs(30), 5.try_into().unwrap()));
+//! #[tokio::main]
+//! async fn main() {
+//!     // a user can use it once every 10 seconds
+//!     let my_command_user_bucket =
+//!         Bucket::new(Limit::new(Duration::from_secs(10), 1.try_into().unwrap()));
+//!     // it can be used up to 5 times every 30 seconds in one channel
+//!     let my_command_channel_bucket =
+//!         Bucket::new(Limit::new(Duration::from_secs(30), 5.try_into().unwrap()));
+//!     run_my_command(
+//!         my_command_user_bucket,
+//!         my_command_channel_bucket,
+//!         12345.try_into().unwrap(),
+//!         123.try_into().unwrap(),
+//!     )
+//!     .await;
+//! }
 //!
-//! // when the command is used
-//! let command_user_id = 12345.try_into().unwrap();
-//! let command_channel_id = 123.try_into().unwrap();
-//! let reply = if let Some(channel_limit_duration) =
-//!     my_command_channel_bucket.limit_duration(command_channel_id)
-//! {
-//!     format!(
-//!         "this was used too much in this channel, please wait {} seconds",
-//!         channel_limit_duration.as_secs()
-//!     );
-//! } else if let Some(user_limit_duration) = my_command_user_bucket.limit_duration(command_user_id)
-//! {
-//!     if Duration::from_secs(5) > user_limit_duration {
-//!         tokio::time::sleep(user_limit_duration).await;
-//!         my_command_user_bucket.register(command_user_id);
-//!         my_command_channel_bucket.register(command_channel_id);
-//!         "i ran your command"
-//!     } else {
-//!         format!(
-//!             "you've been using this too much, please wait {} seconds",
-//!             user_limit_duration.as_secs()
+//! async fn run_my_command(
+//!     user_bucket: Bucket,
+//!     channel_bucket: Bucket,
+//!     user_id: NonZeroU64,
+//!     channel_id: NonZeroU64,
+//! ) -> String {
+//!     if let Some(channel_limit_duration) = channel_bucket.limit_duration(channel_id) {
+//!         return format!(
+//!             "this was used too much in this channel, please wait {} seconds",
+//!             channel_limit_duration.as_secs()
 //!         );
 //!     }
-//! };
+//!     if let Some(user_limit_duration) = user_bucket.limit_duration(user_id) {
+//!         if Duration::from_secs(5) > user_limit_duration {
+//!             tokio::time::sleep(user_limit_duration).await;
+//!         } else {
+//!             return format!(
+//!                 "you've been using this too much, please wait {} seconds",
+//!                 user_limit_duration.as_secs()
+//!             );
+//!         }
+//!     }
+//!     user_bucket.register(user_id);
+//!     channel_bucket.register(channel_id);
+//!     "ran your command".to_owned()
+//! }
 //! ```
 
 #![warn(clippy::cargo, clippy::nursery, clippy::pedantic, clippy::restriction)]
@@ -68,11 +80,11 @@ use dashmap::DashMap;
 /// # examples
 /// something can be used every 3 seconds
 /// ```
-/// Limits::new(std::time::Duration::from_secs(3), 1.try_into().unwrap())
+/// twilight_bucket::Limit::new(std::time::Duration::from_secs(3), 1.try_into().unwrap());
 /// ```
 /// something can be used 10 times in 1 minute, so the limit resets every minute
 /// ```
-/// Limits::new(std::time::Duration::from_secs(60), 10.try_into().unwrap())
+/// twilight_bucket::Limit::new(std::time::Duration::from_secs(60), 10.try_into().unwrap());
 /// ```
 #[must_use]
 #[derive(Copy, Clone)]
