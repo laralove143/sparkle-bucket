@@ -12,21 +12,20 @@
 //! # example
 //! ```
 //! use std::{num::NonZeroU64, time::Duration};
+//!
 //! use twilight_bucket::{Bucket, Limit};
 //!
 //! #[tokio::main]
 //! async fn main() {
 //!     // a user can use it once every 10 seconds
-//!     let my_command_user_bucket =
-//!         Bucket::new(Limit::new(Duration::from_secs(10), 1.try_into()?));
+//!     let my_command_user_bucket = Bucket::new(Limit::new(Duration::from_secs(10), 1));
 //!     // it can be used up to 5 times every 30 seconds in one channel
-//!     let my_command_channel_bucket =
-//!         Bucket::new(Limit::new(Duration::from_secs(30), 5.try_into()?));
+//!     let my_command_channel_bucket = Bucket::new(Limit::new(Duration::from_secs(30), 5));
 //!     run_my_command(
 //!         my_command_user_bucket,
 //!         my_command_channel_bucket,
-//!         12345.try_into()?,
-//!         123.try_into()?,
+//!         12345,
+//!         123,
 //!     )
 //!     .await;
 //! }
@@ -34,8 +33,8 @@
 //! async fn run_my_command(
 //!     user_bucket: Bucket,
 //!     channel_bucket: Bucket,
-//!     user_id: NonZeroU64,
-//!     channel_id: NonZeroU64,
+//!     user_id: u64,
+//!     channel_id: u64,
 //! ) -> String {
 //!     if let Some(channel_limit_duration) = channel_bucket.limit_duration(channel_id) {
 //!         return format!(
@@ -69,7 +68,7 @@
 )]
 
 use std::{
-    num::{NonZeroU64, NonZeroUsize},
+    num::NonZeroU64,
     time::{Duration, Instant},
 };
 
@@ -80,11 +79,11 @@ use dashmap::DashMap;
 /// # examples
 /// something can be used every 3 seconds
 /// ```
-/// twilight_bucket::Limit::new(std::time::Duration::from_secs(3), 1.try_into()?);
+/// twilight_bucket::Limit::new(std::time::Duration::from_secs(3), 1);
 /// ```
 /// something can be used 10 times in 1 minute, so the limit resets every minute
 /// ```
-/// twilight_bucket::Limit::new(std::time::Duration::from_secs(60), 10.try_into()?);
+/// twilight_bucket::Limit::new(std::time::Duration::from_secs(60), 10);
 /// ```
 #[must_use]
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
@@ -92,12 +91,12 @@ pub struct Limit {
     /// how often something can be done [`Limit::count`] times
     duration: Duration,
     /// how many times something can be done in the [`Limit::duration`] period
-    count: NonZeroUsize,
+    count: u16,
 }
 
 impl Limit {
     /// create a new [`Limit`]
-    pub const fn new(duration: Duration, count: NonZeroUsize) -> Self {
+    pub const fn new(duration: Duration, count: u16) -> Self {
         Self { duration, count }
     }
 }
@@ -109,24 +108,20 @@ struct Usage {
     /// the last time it was used
     time: Instant,
     /// how many times it was used
-    count: NonZeroUsize,
+    count: u16,
 }
 
 impl Usage {
     /// make a usage with now as `time` and 1 as `count`
-    #[allow(clippy::unwrap_used)]
     fn new() -> Self {
         Self {
             time: Instant::now(),
-            count: 1.try_into().unwrap(),
+            count: 1,
         }
     }
 }
 
 /// this is the main struct to do everything you need
-///
-/// # thread-safety
-/// you should wrap this in [`Arc`](std::sync::Arc)
 ///
 /// # global or task-based
 /// essentially buckets just store usages and limits, meaning you can create a
@@ -162,21 +157,22 @@ impl Bucket {
     /// limit is done **after** waiting for the limit
     ///
     /// # Panics
-    /// when the usage count is over `NonZeroUsize`
+    /// if the `id` is 0 or when the usage count is over [`u16::MAX`]
     #[allow(clippy::unwrap_used, clippy::integer_arithmetic)]
-    pub fn register(&self, id: NonZeroU64) {
-        match self.usages.get_mut(&id) {
+    pub fn register(&self, id: u64) {
+        let id_non_zero = id.try_into().unwrap();
+        match self.usages.get_mut(&id_non_zero) {
             Some(mut usage) => {
                 let now = Instant::now();
                 usage.count = if now - usage.time > self.limit.duration {
-                    1.try_into().unwrap()
+                    1
                 } else {
-                    (usage.count.get() + 1).try_into().unwrap()
+                    usage.count + 1
                 };
                 usage.time = now;
             }
             None => {
-                self.usages.insert(id, Usage::new());
+                self.usages.insert(id_non_zero, Usage::new());
             }
         }
     }
@@ -184,9 +180,13 @@ impl Bucket {
     /// get the duration to wait until the next usage by `id`, returns `None`
     /// if the ID isn't limited, you should call this **before** registering a
     /// usage
+    ///
+    /// # Panics
+    /// if the `id` is 0
     #[must_use]
-    pub fn limit_duration(&self, id: NonZeroU64) -> Option<Duration> {
-        let usage = self.usages.get(&id)?;
+    #[allow(clippy::unwrap_in_result, clippy::unwrap_used)]
+    pub fn limit_duration(&self, id: u64) -> Option<Duration> {
+        let usage = self.usages.get(&id.try_into().unwrap())?;
         let elapsed = Instant::now() - usage.time;
         (usage.count >= self.limit.count && self.limit.duration > elapsed)
             .then(|| self.limit.duration - elapsed)
@@ -204,8 +204,8 @@ mod tests {
     #[allow(clippy::unwrap_used)]
     #[tokio::test]
     async fn limit_count_1() {
-        let bucket = Bucket::new(Limit::new(Duration::from_secs(2), 1.try_into().unwrap()));
-        let id = 123.try_into().unwrap();
+        let bucket = Bucket::new(Limit::new(Duration::from_secs(2), 1));
+        let id = 123;
 
         assert!(bucket.limit_duration(id).is_none());
 
@@ -221,8 +221,8 @@ mod tests {
     #[allow(clippy::unwrap_used)]
     #[tokio::test]
     async fn limit_count_5() {
-        let bucket = Bucket::new(Limit::new(Duration::from_secs(5), 5.try_into().unwrap()));
-        let id = 123.try_into().unwrap();
+        let bucket = Bucket::new(Limit::new(Duration::from_secs(5), 5));
+        let id = 123;
 
         for _ in 0_u8..5 {
             assert!(bucket.limit_duration(id).is_none());
