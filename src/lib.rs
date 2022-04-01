@@ -156,6 +156,20 @@ impl Bucket {
     /// register a usage, you should call this every time something you want to
     /// limit is done **after** waiting for the limit
     ///
+    /// ```
+    /// # use std::time::Duration;
+    /// # use twilight_bucket::{Bucket, Limit};
+    /// # #[tokio::main]
+    /// # async fn main() {
+    /// # let user_id = 123;
+    /// # let bucket = Bucket::new(Limit::new(Duration::from_secs(1), 1));
+    /// if let Some(duration) = bucket.limit_duration(user_id) {
+    ///     tokio::time::sleep(duration).await;
+    /// }
+    /// bucket.register(user_id);
+    /// # }
+    /// ```
+    ///
     /// # Panics
     /// if the `id` is 0 or when the usage count is over [`u16::MAX`]
     #[allow(clippy::unwrap_used, clippy::integer_arithmetic)]
@@ -180,6 +194,20 @@ impl Bucket {
     /// get the duration to wait until the next usage by `id`, returns `None`
     /// if the ID isn't limited, you should call this **before** registering a
     /// usage
+    ///
+    /// ```
+    /// # use std::time::Duration;
+    /// # use twilight_bucket::{Bucket, Limit};
+    /// # #[tokio::main]
+    /// # async fn main() {
+    /// # let user_id = 123;
+    /// # let bucket = Bucket::new(Limit::new(Duration::from_secs(1), 1));
+    /// if let Some(duration) = bucket.limit_duration(user_id) {
+    ///     tokio::time::sleep(duration).await;
+    /// }
+    /// bucket.register(user_id);
+    /// # }
+    /// ```
     ///
     /// # Panics
     /// if the `id` is 0
