@@ -1,12 +1,13 @@
 [package]
 name = "twilight-bucket"
 description = "wait n seconds before running this again"
+authors = ["laralove"]
 license = "MIT"
 repository = "https://github.com/laralove143/twilight-bucket"
 readme = "README.md"
 categories = ["caching"]
 keywords = ["twilight", "discord", "discord-api", "bucket"]
-version = "0.1.3"
+version = "0.1.4"
 edition = "2021"
 
 [dev-dependencies]

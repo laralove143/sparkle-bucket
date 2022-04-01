@@ -18,15 +18,15 @@
 //! async fn main() {
 //!     // a user can use it once every 10 seconds
 //!     let my_command_user_bucket =
-//!         Bucket::new(Limit::new(Duration::from_secs(10), 1.try_into().unwrap()));
+//!         Bucket::new(Limit::new(Duration::from_secs(10), 1.try_into()?));
 //!     // it can be used up to 5 times every 30 seconds in one channel
 //!     let my_command_channel_bucket =
-//!         Bucket::new(Limit::new(Duration::from_secs(30), 5.try_into().unwrap()));
+//!         Bucket::new(Limit::new(Duration::from_secs(30), 5.try_into()?));
 //!     run_my_command(
 //!         my_command_user_bucket,
 //!         my_command_channel_bucket,
-//!         12345.try_into().unwrap(),
-//!         123.try_into().unwrap(),
+//!         12345.try_into()?,
+//!         123.try_into()?,
 //!     )
 //!     .await;
 //! }
@@ -80,14 +80,14 @@ use dashmap::DashMap;
 /// # examples
 /// something can be used every 3 seconds
 /// ```
-/// twilight_bucket::Limit::new(std::time::Duration::from_secs(3), 1.try_into().unwrap());
+/// twilight_bucket::Limit::new(std::time::Duration::from_secs(3), 1.try_into()?);
 /// ```
 /// something can be used 10 times in 1 minute, so the limit resets every minute
 /// ```
-/// twilight_bucket::Limit::new(std::time::Duration::from_secs(60), 10.try_into().unwrap());
+/// twilight_bucket::Limit::new(std::time::Duration::from_secs(60), 10.try_into()?);
 /// ```
 #[must_use]
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub struct Limit {
     /// how often something can be done [`Limit::count`] times
     duration: Duration,
@@ -150,7 +150,7 @@ pub struct Bucket {
 }
 
 impl Bucket {
-    /// create a new bucket with the given limit
+    /// create a new [`Bucket`] with the given limit
     pub fn new(limit: Limit) -> Self {
         Self {
             limit,
@@ -159,7 +159,8 @@ impl Bucket {
     }
 
     /// register a usage, you should call this every time something you want to
-    /// limit is done, you should call this **after** getting the limit
+    /// limit is done **after** waiting for the limit
+    ///
     /// # Panics
     /// when the usage count is over `NonZeroUsize`
     #[allow(clippy::unwrap_used, clippy::integer_arithmetic)]
@@ -180,7 +181,7 @@ impl Bucket {
         }
     }
 
-    /// gets the duration to wait until the next usage by `id`, returns `None`
+    /// get the duration to wait until the next usage by `id`, returns `None`
     /// if the ID isn't limited, you should call this **before** registering a
     /// usage
     #[must_use]
