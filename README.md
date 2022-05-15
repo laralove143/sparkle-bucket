@@ -1,18 +1,16 @@
-# twilight-bucket
-[![docs.rs - read](https://img.shields.io/badge/docs.rs-read-C99B3C?style=for-the-badge&logo=rust)](https://docs.rs/twilight-bucket)  
-[![crates.io - view](https://img.shields.io/badge/crates.io-view-C99B3C?style=for-the-badge&logo=rust)](https://crates.io/crates/twilight-bucket)
+[![docs.rs - read](https://img.shields.io/badge/docs.rs-view-000000?style=for-the-badge&logo=Docs.rs)](https://docs.rs/twilight-bucket/latest)
+[![crates.io - view](https://img.shields.io/badge/crates.io-view-CB9E48?style=for-the-badge&logo=Rust)](https://crates.io/crates/twilight-bucket)
 
-a [twilight](https://docs.rs/twilight) utility crate to limit users' usage
+# Twilight Bucket
+A utility crate to limit users' usage, a third party crate of the [Twilight ecosystem](https://github.com/twilight-rs/twilight)
 
-see [documentation](https://docs.rs/twilight-bucket) for more info
+Refer to the docs for more
 
-this crate can be used with any library, but it shares twilight's non-goals, such as trying to be more verbose and less
-opinionated and [serenity already has a bucket implementation][serenity bucket]
+This crate can be used with any library, but it shares Twilight's non-goals, such as trying to be more verbose and less
+opinionated and [Serenity already has a bucket implementation](https://docs.rs/serenity/latest/serenity/framework/standard/buckets)
 
-[serenity bucket]: https://docs.rs/serenity/latest/serenity/framework/standard/buckets
+# Contributing
+Contributions or even opening issues are very welcomed
 
-# contributing
-contributions and even opening issues are very welcomed
-
-# licence
-licensed MIT, made by laralove143, this is a third-party crate that's not affiliated with the twilight organization
+# Licence
+Licensed MIT, this is a third party crate that's not affiliated with the Twilight organization

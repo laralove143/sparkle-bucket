@@ -1,15 +1,16 @@
-//! # twilight-bucket
-//! a [twilight](https://docs.rs/twilight) utility crate to limit users' usage
+//! # Twilight Bucket
+//! A utility crate to limit users' usage, a third party crate of the
+//! [Twilight ecosystem](https://docs.rs/twilight)
 //!
-//! all the functionality of this crate is under [`Bucket`], see its
+//! All the functionality of this crate is under [`Bucket`], see its
 //! documentation for usage info
 //!
-//! this crate can be used with any library, but it shares twilight's non-goals,
-//! such as trying to be more verbose and less opinionated
-//! and [serenity already has a bucket implementation][serenity bucket]
+//! This crate can be used with any library, but it shares Twilight's non-goals,
+//! such as trying to be more verbose and less opinionated and
+//! [Serenity already has a bucket implementation
+//! ](https://docs.rs/serenity/latest/serenity/framework/standard/buckets)
 //!
-//! [serenity bucket]: https://docs.rs/serenity/latest/serenity/framework/standard/buckets
-//! # example
+//! # Example
 //! ```
 //! use std::{num::NonZeroU64, time::Duration};
 //!
@@ -17,9 +18,9 @@
 //!
 //! #[tokio::main]
 //! async fn main() {
-//!     // a user can use it once every 10 seconds
+//!     // A user can use it once every 10 seconds
 //!     let my_command_user_bucket = Bucket::new(Limit::new(Duration::from_secs(10), 1));
-//!     // it can be used up to 5 times every 30 seconds in one channel
+//!     // It can be used up to 5 times every 30 seconds in one channel
 //!     let my_command_channel_bucket = Bucket::new(Limit::new(Duration::from_secs(30), 5));
 //!     run_my_command(
 //!         my_command_user_bucket,
@@ -38,7 +39,7 @@
 //! ) -> String {
 //!     if let Some(channel_limit_duration) = channel_bucket.limit_duration(channel_id) {
 //!         return format!(
-//!             "this was used too much in this channel, please wait {} seconds",
+//!             "This was used too much in this channel, please wait {} seconds",
 //!             channel_limit_duration.as_secs()
 //!         );
 //!     }
@@ -47,14 +48,14 @@
 //!             tokio::time::sleep(user_limit_duration).await;
 //!         } else {
 //!             return format!(
-//!                 "you've been using this too much, please wait {} seconds",
+//!                 "You've been using this too much, please wait {} seconds",
 //!                 user_limit_duration.as_secs()
 //!             );
 //!         }
 //!     }
 //!     user_bucket.register(user_id);
 //!     channel_bucket.register(channel_id);
-//!     "ran your command".to_owned()
+//!     "Ran your command".to_owned()
 //! }
 //! ```
 
@@ -74,45 +75,45 @@ use std::{
 
 use dashmap::DashMap;
 
-/// information about how often something is able to be used
+/// Information about how often something is able to be used
 ///
 /// # examples
-/// something can be used every 3 seconds
+/// Something can be used every 3 seconds
 /// ```
 /// twilight_bucket::Limit::new(std::time::Duration::from_secs(3), 1);
 /// ```
-/// something can be used 10 times in 1 minute, so the limit resets every minute
+/// Something can be used 10 times in 1 minute, so the limit resets every minute
 /// ```
 /// twilight_bucket::Limit::new(std::time::Duration::from_secs(60), 10);
 /// ```
 #[must_use]
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub struct Limit {
-    /// how often something can be done [`Limit::count`] times
+    /// How often something can be done [`Limit::count`] times
     duration: Duration,
-    /// how many times something can be done in the [`Limit::duration`] period
+    /// How many times something can be done in the [`Limit::duration`] period
     count: u16,
 }
 
 impl Limit {
-    /// create a new [`Limit`]
+    /// Create a new [`Limit`]
     pub const fn new(duration: Duration, count: u16) -> Self {
         Self { duration, count }
     }
 }
 
-/// usage information about an ID
+/// Usage information about an ID
 #[must_use]
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 struct Usage {
-    /// the last time it was used
+    /// The last time it was used
     time: Instant,
-    /// how many times it was used
+    /// How many times it was used
     count: u16,
 }
 
 impl Usage {
-    /// make a usage with now as `time` and 1 as `count`
+    /// Make a `Usage` with now as `time` and 1 as `count`
     fn new() -> Self {
         Self {
             time: Instant::now(),
@@ -121,31 +122,31 @@ impl Usage {
     }
 }
 
-/// this is the main struct to do everything you need
+/// This is the main struct to do everything you need
 ///
-/// # global or task-based
-/// essentially buckets just store usages and limits, meaning you can create a
+/// # Global or task-based
+/// Essentially buckets just store usages and limits, meaning you can create a
 /// different bucket for each kind of limit: each of your commands, separate
 /// buckets for channel and user usage if you want to have different limits for
 /// each etc.
 ///
-/// # usage
-/// register usages using the [`Bucket::register`] method **after** getting the
+/// # Usage
+/// Register usages using the [`Bucket::register`] method **after** getting the
 /// limit with [`Bucket::limit_duration`]
 ///
 /// `ID`s use [`NonZeroU64`](std::num::NonZeroU64) to be compatible with any
-/// kind of ID: users, guilds, even your custom IDs
+/// kind of ID: users, guilds or even your custom IDs
 #[must_use]
-#[derive(Clone)]
+#[derive(Debug)]
 pub struct Bucket {
-    /// the limit for this bucket
+    /// The limit for this bucket
     limit: Limit,
-    /// usage information for IDs
+    /// Usage information for IDs
     usages: DashMap<NonZeroU64, Usage>,
 }
 
 impl Bucket {
-    /// create a new [`Bucket`] with the given limit
+    /// Create a new [`Bucket`] with the given limit
     pub fn new(limit: Limit) -> Self {
         Self {
             limit,
@@ -153,7 +154,7 @@ impl Bucket {
         }
     }
 
-    /// register a usage, you should call this every time something you want to
+    /// Register a usage, you should call this every time something you want to
     /// limit is done **after** waiting for the limit
     ///
     /// ```
@@ -171,7 +172,7 @@ impl Bucket {
     /// ```
     ///
     /// # Panics
-    /// if the `id` is 0 or when the usage count is over [`u16::MAX`]
+    /// If the `id` is 0 or when the usage count is over [`u16::MAX`]
     #[allow(clippy::unwrap_used, clippy::integer_arithmetic)]
     pub fn register(&self, id: u64) {
         let id_non_zero = id.try_into().unwrap();
@@ -191,8 +192,8 @@ impl Bucket {
         }
     }
 
-    /// get the duration to wait until the next usage by `id`, returns `None`
-    /// if the ID isn't limited, you should call this **before** registering a
+    /// Get the duration to wait until the next usage by `id`, returns `None`
+    /// if the `id` isn't limited, you should call this **before** registering a
     /// usage
     ///
     /// ```
@@ -210,7 +211,7 @@ impl Bucket {
     /// ```
     ///
     /// # Panics
-    /// if the `id` is 0
+    /// If the `id` is 0
     #[must_use]
     #[allow(clippy::unwrap_in_result, clippy::unwrap_used)]
     pub fn limit_duration(&self, id: u64) -> Option<Duration> {
